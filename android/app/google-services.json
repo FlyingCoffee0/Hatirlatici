@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "400961789899",
+    "project_id": "case-codeway012394",
+    "storage_bucket": "case-codeway012394.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:400961789899:android:06091e2cc87b55be13e04e",
+        "android_client_info": {
+          "package_name": "com.FlyingCoffee.codeway"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAOzB5BqIrSJgeeCo7SG7aAWLlGPqyNQzM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
