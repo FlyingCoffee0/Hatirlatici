@@ -2,6 +2,7 @@ import 'package:case_codeway/controllers/todo_controller.dart';
 import 'package:case_codeway/models/todo_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 class TodoListScreen extends StatelessWidget {
   final TodoController _todoController = Get.put(TodoController());
@@ -31,18 +32,41 @@ class TodoListScreen extends StatelessWidget {
           itemCount: _todoController.todoList.length,
           itemBuilder: (context, index) {
             TodoModel todo = _todoController.todoList[index];
+
+            // Tarih formatlama (intl paketi ile)
+            String formattedDate = DateFormat('dd-MM-yyyy').format(todo.dueDate);
+
             return ListTile(
-              title: Text(todo.title),
-              subtitle: Text(todo.note),
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Seçilen tarih üstte gösteriliyor
+                  Text(
+                    'Due Date: $formattedDate', // Tarihi düzgün formatta göster
+                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                  ),
+                  SizedBox(height: 5),
+                  // Başlık (Title)
+                  Text(
+                    todo.title,
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                  SizedBox(height: 5),
+                  // Not (Note)
+                  Text(
+                    todo.note,
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ],
+              ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
                     icon: Icon(Icons.edit, color: Colors.blue),
                     onPressed: () {
-  Get.toNamed('/updateTodo', arguments: todo); // Güncelleme ekranına yönlendirme
-},
-
+                      Get.toNamed('/updateTodo', arguments: todo); // TODO güncelleme ekranına yönlendirme
+                    },
                   ),
                   IconButton(
                     icon: Icon(Icons.delete, color: Colors.red),
