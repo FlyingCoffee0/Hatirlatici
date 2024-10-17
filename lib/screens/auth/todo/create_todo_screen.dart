@@ -68,8 +68,15 @@ class CreateTodoScreen extends StatelessWidget {
               ),
               SizedBox(height: 16),
               ElevatedButton(
+                onPressed: () => _todoController.pickFile(),
+                child: Text('Select Attachment'),
+              ),
+              Obx(() => _todoController.attachmentPath.isNotEmpty
+                  ? Text('Selected: ${_todoController.attachmentPath.value}')
+                  : SizedBox.shrink()),
+              SizedBox(height: 16),
+              ElevatedButton(
                 onPressed: () async {
-                  // TODO: Dosya ekleme işlemini yap
                   await _todoController.createTodo();
                 },
                 child: Text('Create TODO'),

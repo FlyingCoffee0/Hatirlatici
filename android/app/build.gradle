@@ -22,6 +22,12 @@ android {
         jvmTarget = JavaVersion.VERSION_1_8
     }
 
+    dependencies {
+    implementation "androidx.core:core-ktx:1.7.0"  // AndroidX core desteği
+    implementation "androidx.fragment:fragment-ktx:1.4.0"  // Fragment desteği
+    implementation "androidx.biometric:biometric:1.2.0-alpha03" // Biometric desteği
+}
+
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.FlyingCoffee.codeway"
