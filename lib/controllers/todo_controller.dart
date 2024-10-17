@@ -15,9 +15,13 @@ class TodoController extends GetxController {
 
   final titleController = TextEditingController();
   final noteController = TextEditingController();
+  final categoryController = TextEditingController(); // Category alanı geri eklendi
+  final tagsController = TextEditingController(); // Tags alanı geri eklendi
   var priority = 1.obs;
   var attachmentPath = ''.obs;
   var selectedDueDate = Rxn<DateTime>(); // Takvimde seçilen tarih için observable
+  var selectedTime = Rxn<TimeOfDay>(); // Saat seçimi için observable
+  var isTimePickerEnabled = false.obs; // Saat seçici etkin mi?
 
   @override
   void onInit() {
@@ -78,14 +82,27 @@ class TodoController extends GetxController {
 
       DateTime dueDate = selectedDueDate.value ?? DateTime.now().add(Duration(days: 1)); // Seçilen tarih veya varsayılan değer
 
+      // Eğer saat seçilmişse, tarihi ve saati birleştir
+      if (selectedTime.value != null) {
+        dueDate = DateTime(
+          dueDate.year,
+          dueDate.month,
+          dueDate.day,
+          selectedTime.value!.hour,
+          selectedTime.value!.minute,
+        );
+      }
+
+      List<String> tags = tagsController.text.split(',').map((e) => e.trim()).toList();
+
       TodoModel updatedTodo = TodoModel(
         id: todoId,
         title: titleController.text.trim(),
         note: noteController.text.trim(),
         priority: priority.value,
         dueDate: dueDate, // Seçilen teslim tarihi
-        category: '', // Kaldırıldı
-        tags: [], // Kaldırıldı
+        category: categoryController.text.trim(), // Category eklendi
+        tags: tags, // Tags eklendi
         attachmentUrl: savedFilePath ?? attachmentPath.value, // Dosya yolu
       );
 
@@ -109,14 +126,26 @@ class TodoController extends GetxController {
 
       DateTime dueDate = selectedDueDate.value ?? DateTime.now().add(Duration(days: 1)); // Seçilen tarih veya varsayılan
 
+      if (selectedTime.value != null) {
+        dueDate = DateTime(
+          dueDate.year,
+          dueDate.month,
+          dueDate.day,
+          selectedTime.value!.hour,
+          selectedTime.value!.minute,
+        );
+      }
+
+      List<String> tags = tagsController.text.split(',').map((e) => e.trim()).toList();
+
       TodoModel newTodo = TodoModel(
         id: '',
         title: titleController.text.trim(),
         note: noteController.text.trim(),
         priority: priority.value,
         dueDate: dueDate,  // Seçilen teslim tarihi
-        category: '', // Kaldırıldı
-        tags: [], // Kaldırıldı
+        category: categoryController.text.trim(), // Category eklendi
+        tags: tags, // Tags eklendi
         attachmentUrl: savedFilePath, // Kaydedilen dosya yolu
       );
 
@@ -154,5 +183,18 @@ class TodoController extends GetxController {
   // Takvimden gelen tarihi ayarlamak için fonksiyon
   void setDueDate(DateTime date) {
     selectedDueDate.value = date;
+  }
+
+  // Saat seçimi için fonksiyon
+  void setTime(TimeOfDay time) {
+    selectedTime.value = time;
+  }
+
+  // Saat seçici switch'i aç/kapat
+  void toggleTimePicker(bool isEnabled) {
+    isTimePickerEnabled.value = isEnabled;
+    if (!isEnabled) {
+      selectedTime.value = null; // Eğer kapatılırsa saati sıfırla
+    }
   }
 }

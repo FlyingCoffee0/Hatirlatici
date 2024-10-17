@@ -1,7 +1,7 @@
 import 'package:case_codeway/controllers/todo_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
+import 'package:intl/intl.dart'; // Tarih formatlama için intl paketi
 
 class CreateTodoScreen extends StatelessWidget {
   final TodoController _todoController = Get.find<TodoController>();
@@ -12,7 +12,7 @@ class CreateTodoScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text('Create New TODO'),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
@@ -23,6 +23,14 @@ class CreateTodoScreen extends StatelessWidget {
             TextField(
               controller: _todoController.noteController,
               decoration: InputDecoration(labelText: 'Note'),
+            ),
+            TextField(
+              controller: _todoController.categoryController,
+              decoration: InputDecoration(labelText: 'Category'),
+            ),
+            TextField(
+              controller: _todoController.tagsController,
+              decoration: InputDecoration(labelText: 'Tags (comma separated)'),
             ),
             Obx(() {
               return DropdownButton<int>(
@@ -40,15 +48,15 @@ class CreateTodoScreen extends StatelessWidget {
               );
             }),
             SizedBox(height: 20),
-            
-            // Takvim butonu ve seçilen tarihi gösterme
+
+            // Takvim seçimi
             Obx(() {
               return Row(
                 children: [
                   Expanded(
                     child: Text(
                       _todoController.selectedDueDate.value != null
-                          ? 'Selected Date: ${_todoController.selectedDueDate.value!.toLocal()}'.split(' ')[0]
+                          ? 'Selected Date: ${DateFormat('yyyy-MM-dd').format(_todoController.selectedDueDate.value!)}'
                           : 'No Date Chosen',
                     ),
                   ),
@@ -61,7 +69,7 @@ class CreateTodoScreen extends StatelessWidget {
                         lastDate: DateTime(2100),
                       );
                       if (pickedDate != null) {
-                        _todoController.setDueDate(pickedDate); // Seçilen tarihi ayarla
+                        _todoController.setDueDate(pickedDate);
                       }
                     },
                     child: Text('Pick a Date'),
@@ -69,8 +77,60 @@ class CreateTodoScreen extends StatelessWidget {
                 ],
               );
             }),
+
             SizedBox(height: 20),
-            
+
+            // Saat seçimi için Switch ve TimePicker
+            Obx(() {
+              return Row(
+                children: [
+                  Text('Select Time:'),
+                  Switch(
+                    value: _todoController.isTimePickerEnabled.value,
+                    onChanged: (newValue) {
+                      _todoController.toggleTimePicker(newValue);
+                    },
+                  ),
+                ],
+              );
+            }),
+
+            Obx(() {
+              if (_todoController.isTimePickerEnabled.value) {
+                return Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _todoController.selectedTime.value != null
+                                ? 'Selected Time: ${_todoController.selectedTime.value!.format(context)}'
+                                : 'No Time Chosen',
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () async {
+                            TimeOfDay? pickedTime = await showTimePicker(
+                              context: context,
+                              initialTime: TimeOfDay.now(),
+                            );
+                            if (pickedTime != null) {
+                              _todoController.setTime(pickedTime);
+                            }
+                          },
+                          child: Text('Pick a Time'),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              } else {
+                return Container(); // Eğer switch kapalıysa boş widget döndürüyoruz
+              }
+            }),
+
+            SizedBox(height: 20),
+
             ElevatedButton(
               onPressed: () async {
                 await _todoController.createTodo(); // Yeni TODO oluştur
