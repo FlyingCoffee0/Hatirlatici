@@ -26,14 +26,21 @@ class FirestoreService {
   }
 
 
-  // TODO güncellemek
-  Future<void> updateTodo(String todoId, TodoModel todo) async {
-    await _db.collection('todos').doc(todoId).update(todo.toJson());
+ Future<void> updateTodo(String todoId, TodoModel todo) async {
+    try {
+      await _db.collection('todos').doc(todoId).update(todo.toJson());
+    } catch (e) {
+      print("Error updating TODO: $e");
+    }
   }
 
   // TODO silmek
   Future<void> deleteTodo(String todoId) async {
-    await _db.collection('todos').doc(todoId).delete();
+    try {
+      await _db.collection('todos').doc(todoId).delete();
+    } catch (e) {
+      print("Error deleting TODO: $e");
+    }
   }
 
 }

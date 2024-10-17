@@ -1,16 +1,24 @@
 import 'package:case_codeway/controllers/todo_controller.dart';
+import 'package:case_codeway/models/todo_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-
-class CreateTodoScreen extends StatelessWidget {
+class UpdateTodoScreen extends StatelessWidget {
   final TodoController _todoController = Get.find<TodoController>();
 
   @override
   Widget build(BuildContext context) {
+    final TodoModel todo = Get.arguments;
+
+    // Mevcut verilerle input alanlarını dolduruyoruz
+    _todoController.titleController.text = todo.title;
+    _todoController.noteController.text = todo.note;
+    _todoController.priority(todo.priority);
+    _todoController.selectedDueDate.value = todo.dueDate; // Mevcut teslim tarihi
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Create New TODO'),
+        title: Text('Update TODO'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -40,7 +48,7 @@ class CreateTodoScreen extends StatelessWidget {
               );
             }),
             SizedBox(height: 20),
-            
+
             // Takvim butonu ve seçilen tarihi gösterme
             Obx(() {
               return Row(
@@ -56,7 +64,7 @@ class CreateTodoScreen extends StatelessWidget {
                     onPressed: () async {
                       DateTime? pickedDate = await showDatePicker(
                         context: context,
-                        initialDate: DateTime.now(),
+                        initialDate: _todoController.selectedDueDate.value ?? DateTime.now(),
                         firstDate: DateTime.now(),
                         lastDate: DateTime(2100),
                       );
@@ -70,12 +78,13 @@ class CreateTodoScreen extends StatelessWidget {
               );
             }),
             SizedBox(height: 20),
-            
+
             ElevatedButton(
               onPressed: () async {
-                await _todoController.createTodo(); // Yeni TODO oluştur
+                String todoId = todo.id;
+                await _todoController.updateTodo(todoId); // Güncelleme işlemini başlat
               },
-              child: Text('Create TODO'),
+              child: Text('Update TODO'),
             ),
           ],
         ),

@@ -1,26 +1,23 @@
 import 'dart:io';
-import 'package:case_codeway/services/notification_service.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart'; // Local storage için gerekli
 import '../models/todo_model.dart';
 import '../services/firestore_service.dart';
-import 'package:flutter/material.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:path/path.dart'; // Dosya adları için
 
 class TodoController extends GetxController {
   final FirestoreService _firestoreService = FirestoreService();
-  final FirebaseStorage _storage = FirebaseStorage.instance;
-
   var todoList = <TodoModel>[].obs;
   var isLoading = false.obs;
 
   final titleController = TextEditingController();
   final noteController = TextEditingController();
-  final categoryController = TextEditingController();
-  final tagsController = TextEditingController();
   var priority = 1.obs;
-  var attachmentPath = ''.obs; // Dosya yolu
+  var attachmentPath = ''.obs;
+  var selectedDueDate = Rxn<DateTime>(); // Takvimde seçilen tarih için observable
 
   @override
   void onInit() {
@@ -28,86 +25,104 @@ class TodoController extends GetxController {
     fetchTodos();
   }
 
-Future<void> fetchTodos() async {
-  isLoading(true);
-  try {
-    String userId = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';  // Doğru kullanıcı kimliğini alıyoruz
-    var todos = await _firestoreService.getTodos(userId);
-    todoList.assignAll(todos);
-  } catch (e) {
-    Get.snackbar('Error', e.toString());
-  } finally {
-    isLoading(false);
-  }
-}
-
   // Dosya seçme fonksiyonu
   Future<void> pickFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
-    if (result != null) {
-      attachmentPath(result.files.single.path!);
-      Get.snackbar('Success', 'File selected');
+    if (result != null && result.files.single.path != null) {
+      String filePath = result.files.single.path!;
+      attachmentPath(filePath);
+      Get.snackbar('Success', 'File selected: $filePath');
     } else {
       Get.snackbar('Error', 'No file selected');
     }
   }
 
-  // Dosyayı Firebase Storage'a yükleme
-  Future<String?> uploadFile() async {
+  // Dosyayı yerel depolamaya kopyalama işlemi
+  Future<String?> saveFileLocally() async {
     if (attachmentPath.isNotEmpty) {
       try {
         File file = File(attachmentPath.value);
-        String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-        Reference storageRef = _storage.ref().child('attachments/$fileName');
-        UploadTask uploadTask = storageRef.putFile(file);
-        TaskSnapshot snapshot = await uploadTask;
-        String downloadUrl = await snapshot.ref.getDownloadURL();
-        return downloadUrl;
+        final directory = await getApplicationDocumentsDirectory();
+        final fileName = basename(file.path);
+        final localPath = '${directory.path}/$fileName';
+
+        File savedFile = await file.copy(localPath); // Dosyayı kopyala
+        return savedFile.path; // Yolu geri döndür
       } catch (e) {
-        Get.snackbar('Error', 'File upload failed: $e');
+        Get.snackbar('Error', 'File saving failed: $e');
         return null;
       }
     }
     return null;
   }
 
-Future<void> createTodo() async {
+  // TODO silme fonksiyonu
+  Future<void> deleteTodo(String todoId) async {
+    try {
+      isLoading(true);
+      await _firestoreService.deleteTodo(todoId);
+      fetchTodos(); // Silme sonrası verileri güncelle
+      Get.snackbar('Success', 'TODO deleted successfully!');
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to delete TODO: $e');
+    } finally {
+      isLoading(false);
+    }
+  }
+
+  // TODO güncelleme fonksiyonu
+  Future<void> updateTodo(String todoId) async {
+    try {
+      isLoading(true);
+      String? savedFilePath = await saveFileLocally(); // Eğer dosya seçilmişse kaydet
+
+      DateTime dueDate = selectedDueDate.value ?? DateTime.now().add(Duration(days: 1)); // Seçilen tarih veya varsayılan değer
+
+      TodoModel updatedTodo = TodoModel(
+        id: todoId,
+        title: titleController.text.trim(),
+        note: noteController.text.trim(),
+        priority: priority.value,
+        dueDate: dueDate, // Seçilen teslim tarihi
+        category: '', // Kaldırıldı
+        tags: [], // Kaldırıldı
+        attachmentUrl: savedFilePath ?? attachmentPath.value, // Dosya yolu
+      );
+
+      await _firestoreService.updateTodo(todoId, updatedTodo);
+      fetchTodos(); // Güncel TODO listesini al
+      Get.back();
+      Get.snackbar('Success', 'TODO updated successfully!');
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to update TODO: $e');
+    } finally {
+      isLoading(false);
+    }
+  }
+
+  // Yeni TODO oluşturma fonksiyonu
+  Future<void> createTodo() async {
     try {
       isLoading(true);
       String userId = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
-      String? attachmentUrl = await uploadFile();
-      List<String> tags = tagsController.text.split(',').map((e) => e.trim()).toList();
+      String? savedFilePath = await saveFileLocally(); // Dosya kaydetme işlemi
 
-      DateTime dueDate = DateTime.now().add(Duration(days: 1)); // Örnek teslim tarihi
+      DateTime dueDate = selectedDueDate.value ?? DateTime.now().add(Duration(days: 1)); // Seçilen tarih veya varsayılan
 
       TodoModel newTodo = TodoModel(
         id: '',
         title: titleController.text.trim(),
         note: noteController.text.trim(),
         priority: priority.value,
-        dueDate: dueDate,
-        category: categoryController.text.trim(),
-        tags: tags,
-        attachmentUrl: attachmentUrl,
+        dueDate: dueDate,  // Seçilen teslim tarihi
+        category: '', // Kaldırıldı
+        tags: [], // Kaldırıldı
+        attachmentUrl: savedFilePath, // Kaydedilen dosya yolu
       );
 
-      await _firestoreService.addTodo(userId, newTodo);
+      await _firestoreService.addTodo(userId, newTodo); // Firestore'a ekleme
 
-      // Bildirim ayarlama
-      NotificationService().scheduleNotification(
-          newTodo.hashCode, // unique ID
-          'TODO Reminder',
-          'Your TODO ${newTodo.title} is due tomorrow',
-          dueDate.subtract(Duration(days: 1)) // Bir gün önce
-      );
-      NotificationService().scheduleNotification(
-          newTodo.hashCode + 1,
-          'TODO Reminder',
-          'Your TODO ${newTodo.title} is due in 5 minutes',
-          dueDate.subtract(Duration(minutes: 5)) // Beş dakika önce
-      );
-
-      fetchTodos();
+      fetchTodos(); // Verileri yenile
       Get.back();
       Get.snackbar('Success', 'TODO created successfully!');
     } catch (e) {
@@ -117,9 +132,27 @@ Future<void> createTodo() async {
     }
   }
 
+  // Firestore'dan TODO'ları çekme
+  Future<void> fetchTodos() async {
+    isLoading(true);
+    try {
+      String userId = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
+      var todos = await _firestoreService.getTodos(userId);
+      todoList.assignAll(todos);
+    } catch (e) {
+      Get.snackbar('Error', e.toString());
+    } finally {
+      isLoading(false);
+    }
+  }
 
   // Kullanıcı öncelik seçimini güncelleme
   void setPriority(int value) {
     priority(value);
+  }
+
+  // Takvimden gelen tarihi ayarlamak için fonksiyon
+  void setDueDate(DateTime date) {
+    selectedDueDate.value = date;
   }
 }

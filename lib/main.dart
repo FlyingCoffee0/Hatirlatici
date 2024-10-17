@@ -1,6 +1,7 @@
 import 'package:case_codeway/screens/auth/sign_up_screen.dart';
 import 'package:case_codeway/screens/auth/todo/create_todo_screen.dart';
 import 'package:case_codeway/screens/auth/todo/todo_list_screen.dart';
+import 'package:case_codeway/screens/auth/update_todo_screen.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -30,6 +31,11 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/signUp', page: () => SignUpScreen()), // Sign-up screen
         GetPage(name: '/todoList', page: () => TodoListScreen()),
         GetPage(name: '/createTodo', page: () => CreateTodoScreen()), // TODO list screen
+        GetPage(
+  name: '/updateTodo',
+  page: () => UpdateTodoScreen(),
+),
+
       ],
     );
   }

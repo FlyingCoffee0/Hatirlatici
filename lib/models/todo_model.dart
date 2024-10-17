@@ -8,7 +8,7 @@ class TodoModel {
   DateTime dueDate;
   String category;
   List<String> tags;
-  String? attachmentUrl;
+  String? attachmentUrl; // Dosya yolu olacak
 
   TodoModel({
     required this.id,
@@ -21,7 +21,6 @@ class TodoModel {
     this.attachmentUrl,
   });
 
-  // Firestore'dan veri çekmek için modelin bir fromJson methodu
   factory TodoModel.fromJson(Map<String, dynamic> json, String id) {
     return TodoModel(
       id: id,
@@ -31,11 +30,10 @@ class TodoModel {
       dueDate: (json['dueDate'] as Timestamp).toDate(),
       category: json['category'],
       tags: List<String>.from(json['tags']),
-      attachmentUrl: json['attachmentUrl'],
+      attachmentUrl: json['attachmentUrl'], // Dosya yolu
     );
   }
 
-  // Firestore'a veri göndermek için bir toJson methodu
   Map<String, dynamic> toJson() {
     return {
       'title': title,
