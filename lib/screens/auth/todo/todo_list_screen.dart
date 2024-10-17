@@ -61,9 +61,9 @@ class TodoListScreen extends StatelessWidget {
                   title: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Seçilen tarih ve saat birlikte gösteriliyor 
+                      // Seçilen tarih ve saat birlikte gösteriliyor
                       Text(
-                        'Due Date: $formattedDate ${formattedTime != '00:00' ? 'at $formattedTime' : ''}', // Tarih ve saati birlikte göster
+                        'Due Date: $formattedDate ${formattedTime != '00:00' ? 'at $formattedTime' : ''}',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.blue,
@@ -84,9 +84,12 @@ class TodoListScreen extends StatelessWidget {
                       ),
                     ],
                   ),
+                  // Eğer TODO'ya dosya eklenmişse, simge gösterelim
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      if (todo.attachmentUrl != null && todo.attachmentUrl!.isNotEmpty)
+                        Icon(Icons.attach_file, color: Colors.blue), // Dosya simgesi
                       IconButton(
                         icon: Icon(Icons.edit, color: Colors.blue),
                         onPressed: () {
@@ -113,9 +116,6 @@ class TodoListScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  onTap: () {
-                    // Detay ekranına veya başka bir işlem ekranına yönlendirme yapılabilir
-                  },
                 ),
                 Divider(color: Colors.grey), // Her TODO'nun altına gri çizgi ekliyoruz
               ],

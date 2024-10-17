@@ -17,8 +17,9 @@ class UpdateTodoScreen extends StatelessWidget {
     _todoController.priority(todo.priority);
     _todoController.selectedDueDate.value = todo.dueDate;
     _todoController.selectedTime.value = TimeOfDay.fromDateTime(todo.dueDate); // Mevcut saat bilgisi
-    _todoController.categoryController.text = todo.category; // Category alanını dolduruyoruz
-    _todoController.tagsController.text = todo.tags.join(", "); // Tags alanını virgülle ayırıyoruz
+    _todoController.categoryController.text = todo.category;
+    _todoController.tagsController.text = todo.tags.join(", ");
+    _todoController.attachmentPath.value = todo.attachmentUrl ?? ""; // Mevcut dosya yolu
 
     return Scaffold(
       appBar: AppBar(
@@ -140,6 +141,23 @@ class UpdateTodoScreen extends StatelessWidget {
                 } else {
                   return Container(); // Eğer switch kapalıysa boş widget döndürüyoruz
                 }
+              }),
+
+              SizedBox(height: 20),
+
+              // Dosya seçimi butonu
+              ElevatedButton(
+                onPressed: () async {
+                  await _todoController.pickFile();
+                },
+                child: Text('Pick an Attachment'),
+              ),
+
+              // Mevcut dosya yolunu göstermek için
+              Obx(() {
+                return _todoController.attachmentPath.value.isNotEmpty
+                    ? Text('Selected File: ${_todoController.attachmentPath.value}')
+                    : Text('No File Selected');
               }),
 
               SizedBox(height: 20),

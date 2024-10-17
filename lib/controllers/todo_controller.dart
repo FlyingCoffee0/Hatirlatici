@@ -7,6 +7,7 @@ import '../models/todo_model.dart';
 import '../services/firestore_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:path/path.dart'; // Dosya adları için
+import 'package:firebase_storage/firebase_storage.dart'; // Firestore Storage
 
 class TodoController extends GetxController {
   final FirestoreService _firestoreService = FirestoreService();
@@ -22,6 +23,20 @@ class TodoController extends GetxController {
   var selectedDueDate = Rxn<DateTime>(); // Takvimde seçilen tarih için observable
   var selectedTime = Rxn<TimeOfDay>(); // Saat seçimi için observable
   var isTimePickerEnabled = false.obs; // Saat seçici etkin mi?
+
+  // Tüm input alanlarını sıfırlama (Temizleme)
+void clearFormFields() {
+  titleController.clear();
+  noteController.clear();
+  categoryController.clear();
+  tagsController.clear();
+  selectedDueDate.value = null;
+  selectedTime.value = null;
+  attachmentPath.value = '';
+  priority.value = 1; // Varsayılan öncelik
+  isTimePickerEnabled.value = false; // Zaman seçiciyi kapat
+}
+
 
   @override
   void onInit() {
@@ -41,23 +56,22 @@ class TodoController extends GetxController {
     }
   }
 
-  // Dosyayı yerel depolamaya kopyalama işlemi
-  Future<String?> saveFileLocally() async {
-    if (attachmentPath.isNotEmpty) {
-      try {
-        File file = File(attachmentPath.value);
-        final directory = await getApplicationDocumentsDirectory();
-        final fileName = basename(file.path);
-        final localPath = '${directory.path}/$fileName';
+  // Dosyayı Firestore Storage'a yükleme ve URL'yi alma işlemi
+  Future<String?> uploadFileToStorage(String filePath) async {
+    File file = File(filePath);
+    try {
+      String fileName = basename(filePath); // Dosya ismini alıyoruz
+      Reference storageRef = FirebaseStorage.instance.ref().child('attachments/$fileName');
+      UploadTask uploadTask = storageRef.putFile(file);
 
-        File savedFile = await file.copy(localPath); // Dosyayı kopyala
-        return savedFile.path; // Yolu geri döndür
-      } catch (e) {
-        Get.snackbar('Error', 'File saving failed: $e');
-        return null;
-      }
+      // Yükleme işlemi tamamlandığında URL'yi alıyoruz
+      TaskSnapshot snapshot = await uploadTask;
+      String downloadUrl = await snapshot.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to upload file: $e');
+      return null;
     }
-    return null;
   }
 
   // TODO silme fonksiyonu
@@ -78,7 +92,12 @@ class TodoController extends GetxController {
   Future<void> updateTodo(String todoId) async {
     try {
       isLoading(true);
-      String? savedFilePath = await saveFileLocally(); // Eğer dosya seçilmişse kaydet
+
+      // Dosya seçildiyse önce Firestore Storage'a yükleyip URL'yi alıyoruz
+      String? attachmentUrl;
+      if (attachmentPath.isNotEmpty) {
+        attachmentUrl = await uploadFileToStorage(attachmentPath.value);
+      }
 
       DateTime dueDate = selectedDueDate.value ?? DateTime.now().add(Duration(days: 1)); // Seçilen tarih veya varsayılan değer
 
@@ -103,7 +122,7 @@ class TodoController extends GetxController {
         dueDate: dueDate, // Seçilen teslim tarihi
         category: categoryController.text.trim(), // Category eklendi
         tags: tags, // Tags eklendi
-        attachmentUrl: savedFilePath ?? attachmentPath.value, // Dosya yolu
+        attachmentUrl: attachmentUrl ?? attachmentPath.value, // Dosya yolu
       );
 
       await _firestoreService.updateTodo(todoId, updatedTodo);
@@ -122,7 +141,6 @@ class TodoController extends GetxController {
     try {
       isLoading(true);
       String userId = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
-      String? savedFilePath = await saveFileLocally(); // Dosya kaydetme işlemi
 
       DateTime dueDate = selectedDueDate.value ?? DateTime.now().add(Duration(days: 1)); // Seçilen tarih veya varsayılan
 
@@ -136,6 +154,12 @@ class TodoController extends GetxController {
         );
       }
 
+      // Dosya yüklemesi varsa önce dosyayı yükleyelim
+      String? attachmentUrl;
+      if (attachmentPath.isNotEmpty) {
+        attachmentUrl = await uploadFileToStorage(attachmentPath.value);
+      }
+
       List<String> tags = tagsController.text.split(',').map((e) => e.trim()).toList();
 
       TodoModel newTodo = TodoModel(
@@ -143,10 +167,10 @@ class TodoController extends GetxController {
         title: titleController.text.trim(),
         note: noteController.text.trim(),
         priority: priority.value,
-        dueDate: dueDate,  // Seçilen teslim tarihi
+        dueDate: dueDate,
         category: categoryController.text.trim(), // Category eklendi
         tags: tags, // Tags eklendi
-        attachmentUrl: savedFilePath, // Kaydedilen dosya yolu
+        attachmentUrl: attachmentUrl, // Dosya URL'sini Firestore'a kaydediyoruz
       );
 
       await _firestoreService.addTodo(userId, newTodo); // Firestore'a ekleme

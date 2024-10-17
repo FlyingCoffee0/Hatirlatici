@@ -8,6 +8,9 @@ class CreateTodoScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Yeni bir TODO oluştururken alanları temizle
+    _todoController.clearFormFields();
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Create New TODO'),
@@ -131,12 +134,31 @@ class CreateTodoScreen extends StatelessWidget {
 
             SizedBox(height: 20),
 
+            // Dosya seçimi butonu
             ElevatedButton(
               onPressed: () async {
-                await _todoController.createTodo(); // Yeni TODO oluştur
+                await _todoController.pickFile();
               },
-              child: Text('Create TODO'),
+              child: Text('Pick an Attachment'),
             ),
+
+            SizedBox(height: 20),
+
+            // "Create TODO" butonu (asenkron işlemleri bekleyip birden fazla tıklamayı engelliyoruz)
+            Obx(() {
+              return ElevatedButton(
+                onPressed: _todoController.isLoading.value
+                    ? null // Eğer işlem devam ediyorsa butonu devre dışı bırak
+                    : () async {
+                        await _todoController.createTodo(); // Yeni TODO oluştur
+                        // TODO oluşturulduktan sonra My TODOs listesine yönlendir
+                        Get.offAllNamed('/myTodos'); // Tüm geçmiş sayfaları kapatıp My TODOs ekranına git
+                      },
+                child: _todoController.isLoading.value
+                    ? CircularProgressIndicator(color: Colors.white) // İşlem sürüyorsa loading göster
+                    : Text('Create TODO'),
+              );
+            }),
           ],
         ),
       ),
