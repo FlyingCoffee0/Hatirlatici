@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart'; // Tarih formatlama için intl paketi
 
-
 class TodoListScreen extends StatelessWidget {
   final TodoController _todoController = Get.put(TodoController());
 
@@ -15,9 +14,9 @@ class TodoListScreen extends StatelessWidget {
       case 1:
         return Colors.green; // Low
       case 2:
-        return Colors.yellow; // Medium
+        return Colors.orangeAccent; // Medium
       case 3:
-        return Colors.red; // High
+        return Colors.redAccent; // High
       default:
         return Colors.grey;
     }
@@ -27,11 +26,18 @@ class TodoListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('My TODOs'),
+        backgroundColor: Color(0xFF8A56AC), // Soft purple color
+        title: Text(
+          'My TODOs',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         actions: [
           // Arama butonu
           IconButton(
-            icon: Icon(Icons.search),
+            icon: Icon(Icons.search, size: 28),
             onPressed: () {
               showSearch(
                 context: context,
@@ -40,7 +46,7 @@ class TodoListScreen extends StatelessWidget {
             },
           ),
           IconButton(
-            icon: Icon(Icons.add),
+            icon: Icon(Icons.add, size: 28),
             onPressed: () => Get.toNamed('/createTodo'), // TODO oluşturma ekranına geçiş
           ),
         ],
@@ -57,10 +63,20 @@ class TodoListScreen extends StatelessWidget {
             : _todoController.filteredTodoList;
 
         if (todoList.isEmpty) {
-          return Center(child: Text('No TODOs available'));
+          return Center(
+            child: Text(
+              'No TODOs available',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+            ),
+          );
         }
 
         return ListView.builder(
+          padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
           itemCount: todoList.length,
           itemBuilder: (context, index) {
             TodoModel todo = todoList[index];
@@ -71,71 +87,84 @@ class TodoListScreen extends StatelessWidget {
 
             return Column(
               children: [
-                ListTile(
-                  leading: CircleAvatar( // Priority'ye göre renkli yuvarlak
-                    backgroundColor: getPriorityColor(todo.priority),
-                    radius: 12, // Yuvarlağın boyutu
+                Card(
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  title: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Seçilen tarih ve saat birlikte gösteriliyor
-                      Text(
-                        'Due Date: $formattedDate ${formattedTime != '00:00' ? 'at $formattedTime' : ''}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue,
-                          fontSize: 12, // Tarih ve saatin boyutunu küçülttük
+                  child: ListTile(
+                    contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                    leading: CircleAvatar( // Priority'ye göre renkli yuvarlak
+                      backgroundColor: getPriorityColor(todo.priority),
+                      radius: 16, // Yuvarlağın boyutu
+                    ),
+                    title: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Seçilen tarih ve saat birlikte gösteriliyor
+                        Text(
+                          'Due Date: $formattedDate ${formattedTime != '00:00' ? 'at $formattedTime' : ''}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF8A56AC), // Soft purple color
+                            fontSize: 12, // Tarih ve saatin boyutunu küçülttük
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 5),
-                      // Başlık (Title)
-                      Text(
-                        todo.title,
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                      ),
-                      SizedBox(height: 5),
-                      // Not (Note)
-                      Text(
-                        todo.note,
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
-                  // Eğer TODO'ya dosya eklenmişse, simge gösterelim
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (todo.attachmentUrl != null && todo.attachmentUrl!.isNotEmpty)
-                        Icon(Icons.attach_file, color: Colors.blue), // Dosya simgesi
-                      IconButton(
-                        icon: Icon(Icons.edit, color: Colors.blue),
-                        onPressed: () {
-                          Get.toNamed('/updateTodo', arguments: todo); // TODO güncelleme ekranına yönlendirme
-                        },
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red),
-                        onPressed: () async {
-                          // Kullanıcıdan silme işlemi için onay alalım
-                          bool confirmed = await Get.defaultDialog(
-                            title: "Delete TODO",
-                            middleText: "Are you sure you want to delete this TODO?",
-                            textCancel: "Cancel",
-                            textConfirm: "Delete",
-                            confirmTextColor: Colors.white,
-                            onConfirm: () => Get.back(result: true),
-                            onCancel: () => Get.back(result: false),
-                          );
-                          if (confirmed) {
-                            await _todoController.deleteTodo(todo.id); // Silme işlemi
-                          }
-                        },
-                      ),
-                    ],
+                        SizedBox(height: 5),
+                        // Başlık (Title)
+                        Text(
+                          todo.title,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(height: 5),
+                        // Not (Note)
+                        Text(
+                          todo.note,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                    // Eğer TODO'ya dosya eklenmişse, simge gösterelim
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (todo.attachmentUrl != null && todo.attachmentUrl!.isNotEmpty)
+                          Icon(Icons.attach_file, color: Color(0xFF8A56AC)), // Dosya simgesi
+                        IconButton(
+                          icon: Icon(Icons.edit, color: Colors.blue),
+                          onPressed: () {
+                            Get.toNamed('/updateTodo', arguments: todo); // TODO güncelleme ekranına yönlendirme
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.delete, color: Colors.red),
+                          onPressed: () async {
+                            // Kullanıcıdan silme işlemi için onay alalım
+                            bool confirmed = await Get.defaultDialog(
+                              title: "Delete TODO",
+                              middleText: "Are you sure you want to delete this TODO?",
+                              textCancel: "Cancel",
+                              textConfirm: "Delete",
+                              confirmTextColor: Colors.white,
+                              onConfirm: () => Get.back(result: true),
+                              onCancel: () => Get.back(result: false),
+                            );
+                            if (confirmed) {
+                              await _todoController.deleteTodo(todo.id); // Silme işlemi
+                            }
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                Divider(color: Colors.grey), // Her TODO'nun altına gri çizgi ekliyoruz
+                SizedBox(height: 10), // Her TODO'nun altına boşluk ekliyoruz
               ],
             );
           },
