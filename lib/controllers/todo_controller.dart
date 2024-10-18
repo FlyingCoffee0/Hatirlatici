@@ -126,6 +126,7 @@ void clearFormFields() {
       );
 
       await _firestoreService.updateTodo(todoId, updatedTodo);
+      
       fetchTodos(); // Güncel TODO listesini al
       Get.back();
       Get.snackbar('Success', 'TODO updated successfully!');
@@ -185,19 +186,34 @@ void clearFormFields() {
     }
   }
 
-  // Firestore'dan TODO'ları çekme
-  Future<void> fetchTodos() async {
-    isLoading(true);
-    try {
-      String userId = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
-      var todos = await _firestoreService.getTodos(userId);
-      todoList.assignAll(todos);
-    } catch (e) {
-      Get.snackbar('Error', e.toString());
-    } finally {
-      isLoading(false);
+ // Firestore'dan TODO'ları çekme ve zamanı geçmiş TODO'ları silme
+Future<void> fetchTodos() async {
+  isLoading(true);
+  try {
+    String userId = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
+
+    // TODO'ları Firestore'dan alıyoruz
+    var todos = await _firestoreService.getTodos(userId);
+
+    // Zamanı geçmiş TODO'ları kontrol edip silme işlemi
+    for (var todo in todos) {
+      if (todo.dueDate.isBefore(DateTime.now())) {
+        await _firestoreService.deleteTodo(todo.id); // Zamanı geçmiş TODO'yu sil
+      }
     }
+
+    // Zamanı geçmemiş TODO'ları listeye ekliyoruz
+    todoList.assignAll(todos.where((todo) => todo.dueDate.isAfter(DateTime.now())).toList());
+
+  } catch (e) {
+    Get.snackbar('Error', e.toString());
+  } finally {
+    isLoading(false);
   }
+}
+
+
+
 
   // Kullanıcı öncelik seçimini güncelleme
   void setPriority(int value) {

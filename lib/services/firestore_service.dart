@@ -21,7 +21,7 @@ class FirestoreService {
   Future<void> addTodo(String userId, TodoModel todo) async {
     await _db.collection('todos').add({
       ...todo.toJson(),
-      'userId': userId, // Kullanıcı ID'sini de ekliyoruz
+      'userId': userId, // Kullanıcı ID'sini de ekliyorum
     });
   }
 

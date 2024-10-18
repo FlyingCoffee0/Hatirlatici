@@ -59,7 +59,7 @@ class CreateTodoScreen extends StatelessWidget {
                   Expanded(
                     child: Text(
                       _todoController.selectedDueDate.value != null
-                          ? 'Selected Date: ${DateFormat('yyyy-MM-dd').format(_todoController.selectedDueDate.value!)}'
+                          ? 'Selected Date: ${DateFormat('dd-MM-yyyy').format(_todoController.selectedDueDate.value!)}'
                           : 'No Date Chosen',
                     ),
                   ),
@@ -152,7 +152,7 @@ class CreateTodoScreen extends StatelessWidget {
                     : () async {
                         await _todoController.createTodo(); // Yeni TODO oluştur
                         // TODO oluşturulduktan sonra My TODOs listesine yönlendir
-                        Get.offAllNamed('/myTodos'); // Tüm geçmiş sayfaları kapatıp My TODOs ekranına git
+                        Get.offAllNamed('/todoList'); // Tüm geçmiş sayfaları kapatıp My TODOs ekranına git
                       },
                 child: _todoController.isLoading.value
                     ? CircularProgressIndicator(color: Colors.white) // İşlem sürüyorsa loading göster
