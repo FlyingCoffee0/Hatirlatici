@@ -1,7 +1,7 @@
 import 'package:case_codeway/controllers/todo_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart'; // Tarih formatlama için intl paketi
+import 'package:intl/intl.dart'; 
 
 class CreateTodoScreen extends StatelessWidget {
   final TodoController _todoController = Get.find<TodoController>();
@@ -13,7 +13,7 @@ class CreateTodoScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFF8A56AC), // Soft purple color
+        backgroundColor: Color(0xFF8A56AC), 
         title: Text('Create New TODO'),
       ),
       body: SingleChildScrollView(
@@ -127,75 +127,62 @@ class CreateTodoScreen extends StatelessWidget {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF8A56AC), // Soft purple color
+                      backgroundColor: Color(0xFF8A56AC), 
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12.0),
                       ),
                       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     ),
-                    child: Text('Pick a Date'),
+                    child: Text('Pick a Date', style: TextStyle(color: Colors.white),),
                   ),
                 ],
               );
             }),
             SizedBox(height: 20),
 
-            // Saat seçimi (Time Picker)
-            Obx(() {
-              return Row(
-                children: [
-                  Text('Select Time:', style: TextStyle(fontSize: 16, color: Colors.black)),
-                  Switch(
-                    value: _todoController.isTimePickerEnabled.value,
-                    onChanged: (newValue) {
-                      _todoController.toggleTimePicker(newValue);
-                    },
-                  ),
-                ],
-              );
-            }),
-
-            Obx(() {
-              if (_todoController.isTimePickerEnabled.value) {
-                return Column(
+ // Saat seçimi 
+            Column(
+              children: [
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            _todoController.selectedTime.value != null
-                                ? 'Selected Time: ${_todoController.selectedTime.value!.format(context)}'
-                                : 'No Time Chosen',
-                            style: TextStyle(fontSize: 16, color: Colors.black),
-                          ),
+                    Expanded(
+                      child: Obx(() {
+                        return Text(
+                          _todoController.selectedTime.value != null
+                              ? 'Selected Time: ${_todoController.selectedTime.value!.format(context)}'
+                              : 'No Time Chosen',
+                          style: TextStyle(fontSize: 16, color: Colors.black),
+                        );
+                      }),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        TimeOfDay? pickedTime = await showTimePicker(
+                          context: context,
+                          initialTime: TimeOfDay.now(),
+                        );
+                        if (pickedTime != null) {
+                          _todoController.setTime(pickedTime);
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF8A56AC),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.0),
                         ),
-                        ElevatedButton(
-                          onPressed: () async {
-                            TimeOfDay? pickedTime = await showTimePicker(
-                              context: context,
-                              initialTime: TimeOfDay.now(),
-                            );
-                            if (pickedTime != null) {
-                              _todoController.setTime(pickedTime);
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF8A56AC), // Soft purple color
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                          ),
-                          child: Text('Pick a Time'),
-                        ),
-                      ],
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      ),
+                      child: Text(
+                        'Pick a Time',
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                   ],
-                );
-              } else {
-                return Container();
-              }
-            }),
+                ),
+              ],
+            ),
+
+            SizedBox(height: 20),
             SizedBox(height: 20),
 
             // Dosya seçimi butonu (Attachment)

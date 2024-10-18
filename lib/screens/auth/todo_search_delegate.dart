@@ -15,8 +15,8 @@ class TodoSearchDelegate extends SearchDelegate {
       IconButton(
         icon: Icon(Icons.clear),
         onPressed: () {
-          query = ''; // Arama çubuğunu temizle
-          _todoController.updateSearchQuery(''); // Arama sorgusunu sıfırla
+          query = ''; 
+          _todoController.updateSearchQuery(''); 
         },
       ),
     ];
@@ -24,11 +24,11 @@ class TodoSearchDelegate extends SearchDelegate {
 
   @override
   Widget buildLeading(BuildContext context) {
-    // Arama çubuğunun solundaki geri butonu
+    
     return IconButton(
       icon: Icon(Icons.arrow_back),
       onPressed: () {
-        close(context, null); // Arama ekranını kapat
+        close(context, null); 
       },
     );
   }
@@ -36,7 +36,7 @@ class TodoSearchDelegate extends SearchDelegate {
   @override
   Widget buildResults(BuildContext context) {
     // Arama sonuçlarını göster
-    _todoController.updateSearchQuery(query); // Arama sorgusunu güncelle
+    _todoController.updateSearchQuery(query); 
 
     return Obx(() {
       var filteredList = _todoController.filteredTodoList;
@@ -65,7 +65,7 @@ class TodoSearchDelegate extends SearchDelegate {
   @override
   Widget buildSuggestions(BuildContext context) {
     // Arama önerilerini göster
-    _todoController.updateSearchQuery(query); // Arama sorgusunu güncelle
+    _todoController.updateSearchQuery(query); 
 
     return Obx(() {
       var filteredList = _todoController.filteredTodoList;

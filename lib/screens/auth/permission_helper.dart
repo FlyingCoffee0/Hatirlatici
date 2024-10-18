@@ -4,7 +4,7 @@ class PermissionHelper {
   // Exact Alarm izni istemek için fonksiyon
   Future<void> requestExactAlarmPermission() async {
     if (await Permission.scheduleExactAlarm.isDenied) {
-      // Eğer izin verilmemişse, izni istemeyi deneyin
+      // Eğer izin verilmemişse, izni istemeyi deneme
       final status = await Permission.scheduleExactAlarm.request();
       if (status.isGranted) {
         print("Exact Alarm permission granted.");

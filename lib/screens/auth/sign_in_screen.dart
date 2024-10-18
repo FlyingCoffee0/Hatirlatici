@@ -70,12 +70,12 @@ class SignInScreen extends StatelessWidget {
                 ElevatedButton(
                   onPressed: () => _userController.signIn(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF8A56AC), // Soft purple color
+                    backgroundColor: Color(0xFF8A56AC), 
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12.0),
                     ),
                     padding: EdgeInsets.symmetric(vertical: 18),
-                    minimumSize: Size(double.infinity, 50), // Full-width button
+                    minimumSize: Size(double.infinity, 50), 
                   ),
                   child: Text(
                     'Sign In',
@@ -107,12 +107,12 @@ class SignInScreen extends StatelessWidget {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[300], // Daha küçük ve gri bir buton
+                    backgroundColor: Colors.grey[300], 
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12.0),
                     ),
                     padding: EdgeInsets.symmetric(vertical: 12),
-                    minimumSize: Size(double.infinity, 40), // Full-width buton, daha küçük
+                    minimumSize: Size(double.infinity, 40), 
                   ),
                   child: Text(
                     'Sign In with Biometrics',

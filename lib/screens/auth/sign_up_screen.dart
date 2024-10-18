@@ -64,16 +64,16 @@ class SignUpScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 30),
                 
-                // Sign Up Button with soft orange color
+                // Sign Up Button 
                 ElevatedButton(
                   onPressed: () => _userController.signUp(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFF4A261), // Soft orange color
+                    backgroundColor: Color(0xFFF4A261), 
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12.0),
                     ),
                     padding: EdgeInsets.symmetric(vertical: 18),
-                    minimumSize: Size(double.infinity, 50), // Full-width button
+                    minimumSize: Size(double.infinity, 50), 
                   ),
                   child: Text(
                     'Sign Up',

@@ -3,10 +3,22 @@ import 'package:case_codeway/models/todo_model.dart';
 import 'package:case_codeway/screens/auth/todo_search_delegate.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart'; // Tarih formatlama için intl paketi
+import 'package:intl/intl.dart'; 
 
-class TodoListScreen extends StatelessWidget {
+class TodoListScreen extends StatefulWidget {
+  @override
+  _TodoListScreenState createState() => _TodoListScreenState();
+}
+
+class _TodoListScreenState extends State<TodoListScreen> {
   final TodoController _todoController = Get.put(TodoController());
+
+  @override
+  void initState() {
+    super.initState();
+    // Controller'ı sadece burada başlatıyoruz
+    _todoController.fetchTodos(); // İlk başlatma sırasında görevleri al
+  }
 
   // Önceliğe göre renk döndüren bir fonksiyon
   Color getPriorityColor(int priority) {
@@ -26,7 +38,7 @@ class TodoListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFF8A56AC), // Soft purple color
+        backgroundColor: Color(0xFF8A56AC),
         title: Text(
           'My TODOs',
           style: TextStyle(
@@ -75,6 +87,18 @@ class TodoListScreen extends StatelessWidget {
           );
         }
 
+        // Tarih ve önceliğe göre sıralama
+        todoList.sort((a, b) {
+          // Tarihe göre sıralama (en yakın tarih ilk sırada)
+          int dateComparison = a.dueDate.compareTo(b.dueDate);
+
+          // Eğer tarihler aynı ise, önceliğe göre sıralama (High -> Low)
+          if (dateComparison == 0) {
+            return b.priority.compareTo(a.priority); // Yüksek öncelik önce
+          }
+          return dateComparison; // Tarihe göre sıralama
+        });
+
         return ListView.builder(
           padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
           itemCount: todoList.length,
@@ -82,7 +106,7 @@ class TodoListScreen extends StatelessWidget {
             TodoModel todo = todoList[index];
 
             // Tarih ve saat formatlama
-            String formattedDate = DateFormat('yyyy-MM-dd').format(todo.dueDate);
+            String formattedDate = DateFormat('dd-MM-yyyy').format(todo.dueDate);
             String formattedTime = DateFormat('HH:mm').format(todo.dueDate);
 
             return Column(
@@ -94,20 +118,20 @@ class TodoListScreen extends StatelessWidget {
                   ),
                   child: ListTile(
                     contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                    leading: CircleAvatar( // Priority'ye göre renkli yuvarlak
+                    leading: CircleAvatar( 
                       backgroundColor: getPriorityColor(todo.priority),
-                      radius: 16, // Yuvarlağın boyutu
+                      radius: 16,
                     ),
                     title: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Seçilen tarih ve saat birlikte gösteriliyor
                         Text(
-                          'Due Date: $formattedDate ${formattedTime != '00:00' ? 'at $formattedTime' : ''}',
+                          '$formattedDate ${formattedTime != '00:00' ? 'at $formattedTime' : ''}',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF8A56AC), // Soft purple color
-                            fontSize: 12, // Tarih ve saatin boyutunu küçülttük
+                            color: Color(0xFF8A56AC), 
+                            fontSize: 14,
                           ),
                         ),
                         SizedBox(height: 5),
@@ -115,7 +139,7 @@ class TodoListScreen extends StatelessWidget {
                         Text(
                           todo.title,
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 15,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -130,12 +154,12 @@ class TodoListScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    // Eğer TODO'ya dosya eklenmişse, simge gösterelim
+                    // Eğer TODO'ya dosya eklenmişse, simge gösterme
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (todo.attachmentUrl != null && todo.attachmentUrl!.isNotEmpty)
-                          Icon(Icons.attach_file, color: Color(0xFF8A56AC)), // Dosya simgesi
+                          Icon(Icons.attach_file, color: Color(0xFF8A56AC)),
                         IconButton(
                           icon: Icon(Icons.edit, color: Colors.blue),
                           onPressed: () {
@@ -145,7 +169,7 @@ class TodoListScreen extends StatelessWidget {
                         IconButton(
                           icon: Icon(Icons.delete, color: Colors.red),
                           onPressed: () async {
-                            // Kullanıcıdan silme işlemi için onay alalım
+                            // Kullanıcıdan silme işlemi için onay alma
                             bool confirmed = await Get.defaultDialog(
                               title: "Delete TODO",
                               middleText: "Are you sure you want to delete this TODO?",
@@ -156,7 +180,7 @@ class TodoListScreen extends StatelessWidget {
                               onCancel: () => Get.back(result: false),
                             );
                             if (confirmed) {
-                              await _todoController.deleteTodo(todo.id); // Silme işlemi
+                              await _todoController.deleteTodo(todo.id);
                             }
                           },
                         ),
@@ -164,7 +188,7 @@ class TodoListScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(height: 10), // Her TODO'nun altına boşluk ekliyoruz
+                SizedBox(height: 10),
               ],
             );
           },

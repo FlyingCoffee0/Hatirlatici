@@ -14,7 +14,7 @@ import 'package:timezone/data/latest.dart' as tz;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-    tz.initializeTimeZones(); // Timezone'u başlatıyoruz.
+    tz.initializeTimeZones(); 
   await NotificationService().initNotification();
 
   
@@ -22,7 +22,7 @@ void main() async {
   await Firebase.initializeApp();
 
   await FirebaseAppCheck.instance.activate(
-    androidProvider: AndroidProvider.debug, // Ya da SafetyNet
+    androidProvider: AndroidProvider.debug, 
   );
  
 
@@ -37,9 +37,9 @@ class MyApp extends StatelessWidget {
       initialRoute: '/signIn',
       getPages: [
         GetPage(name: '/signIn', page: () => SignInScreen()),
-        GetPage(name: '/signUp', page: () => SignUpScreen()), // Sign-up screen
+        GetPage(name: '/signUp', page: () => SignUpScreen()), 
         GetPage(name: '/todoList', page: () => TodoListScreen()),
-        GetPage(name: '/createTodo', page: () => CreateTodoScreen()), // TODO list screen
+        GetPage(name: '/createTodo', page: () => CreateTodoScreen()), 
         GetPage(
   name: '/updateTodo',
   page: () => UpdateTodoScreen(),

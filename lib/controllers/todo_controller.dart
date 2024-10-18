@@ -2,12 +2,11 @@ import 'dart:io';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:path_provider/path_provider.dart'; // Local storage için gerekli
 import '../models/todo_model.dart';
 import '../services/firestore_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:path/path.dart'; // Dosya adları için
-import 'package:firebase_storage/firebase_storage.dart'; // Firestore Storage
+import 'package:path/path.dart'; 
+import 'package:firebase_storage/firebase_storage.dart'; 
 
 class TodoController extends GetxController {
   final FirestoreService _firestoreService = FirestoreService();
@@ -18,13 +17,12 @@ class TodoController extends GetxController {
 
   final titleController = TextEditingController();
   final noteController = TextEditingController();
-  final categoryController = TextEditingController(); // Category alanı geri eklendi
-  final tagsController = TextEditingController(); // Tags alanı geri eklendi
+  final categoryController = TextEditingController(); 
+  final tagsController = TextEditingController(); 
   var priority = 1.obs;
   var attachmentPath = ''.obs;
   var selectedDueDate = Rxn<DateTime>(); // Takvimde seçilen tarih için observable
   var selectedTime = Rxn<TimeOfDay>(); // Saat seçimi için observable
-  var isTimePickerEnabled = false.obs; // Saat seçici etkin mi?
 
   // Tüm input alanlarını sıfırlama (Temizleme)
   void clearFormFields() {
@@ -36,7 +34,6 @@ class TodoController extends GetxController {
     selectedTime.value = null;
     attachmentPath.value = '';
     priority.value = 1; // Varsayılan öncelik
-    isTimePickerEnabled.value = false; // Zaman seçiciyi kapat
   }
 
   @override
@@ -62,11 +59,11 @@ class TodoController extends GetxController {
   Future<String?> uploadFileToStorage(String filePath) async {
     File file = File(filePath);
     try {
-      String fileName = basename(filePath); // Dosya ismini alıyoruz
+      String fileName = basename(filePath); // Dosya ismini alıyorum
       Reference storageRef = FirebaseStorage.instance.ref().child('attachments/$fileName');
       UploadTask uploadTask = storageRef.putFile(file);
 
-      // Yükleme işlemi tamamlandığında URL'yi alıyoruz
+      // Yükleme işlemi tamamlandığında URL'yi alıyorum
       TaskSnapshot snapshot = await uploadTask;
       String downloadUrl = await snapshot.ref.getDownloadURL();
       return downloadUrl;
@@ -91,53 +88,73 @@ class TodoController extends GetxController {
   }
 
   // TODO güncelleme fonksiyonu
-  Future<void> updateTodo(String todoId) async {
-    try {
-      isLoading(true);
+Future<void> updateTodo(String todoId) async {
+  if (isLoading.value) return; // Eğer işlem devam ediyorsa, tekrar başlatma
+  
+  try {
+    isLoading(true); // Yükleniyor durumu başlatıldı
 
-      // Dosya seçildiyse önce Firestore Storage'a yükleyip URL'yi alıyoruz
-      String? attachmentUrl;
-      if (attachmentPath.isNotEmpty) {
-        attachmentUrl = await uploadFileToStorage(attachmentPath.value);
-      }
-
-      DateTime dueDate = selectedDueDate.value ?? DateTime.now().add(Duration(days: 1)); // Seçilen tarih veya varsayılan değer
-
-      // Eğer saat seçilmişse, tarihi ve saati birleştir
-      if (selectedTime.value != null) {
-        dueDate = DateTime(
-          dueDate.year,
-          dueDate.month,
-          dueDate.day,
-          selectedTime.value!.hour,
-          selectedTime.value!.minute,
-        );
-      }
-
-      List<String> tags = tagsController.text.split(',').map((e) => e.trim()).toList();
-
-      TodoModel updatedTodo = TodoModel(
-        id: todoId,
-        title: titleController.text.trim(),
-        note: noteController.text.trim(),
-        priority: priority.value,
-        dueDate: dueDate, // Seçilen teslim tarihi
-        category: categoryController.text.trim(), // Category eklendi
-        tags: tags, // Tags eklendi
-        attachmentUrl: attachmentUrl ?? attachmentPath.value, // Dosya yolu
-      );
-
-      await _firestoreService.updateTodo(todoId, updatedTodo);
-      
-      fetchTodos(); // Güncel TODO listesini al
-      Get.back();
-      Get.snackbar('Success', 'TODO updated successfully!');
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to update TODO: $e');
-    } finally {
-      isLoading(false);
+    // Dosya seçildiyse önce Firestore Storage'a yükleyip URL'yi alıyoruz
+    String? attachmentUrl;
+    if (attachmentPath.isNotEmpty) {
+      attachmentUrl = await uploadFileToStorage(attachmentPath.value);
     }
+
+    DateTime dueDate = selectedDueDate.value ?? DateTime.now().add(Duration(days: 1)); // Seçilen tarih veya varsayılan değer
+
+    // Eğer saat seçilmediyse varsayılan olarak 23:59 ayarlanır
+    if (selectedTime.value != null) {
+      dueDate = DateTime(
+        dueDate.year,
+        dueDate.month,
+        dueDate.day,
+        selectedTime.value!.hour,
+        selectedTime.value!.minute,
+      );
+    } else {
+      dueDate = DateTime(dueDate.year, dueDate.month, dueDate.day, 23, 59); // Varsayılan saat 23:59
+    }
+
+    List<String> tags = tagsController.text.split(',').map((e) => e.trim()).toList();
+
+    TodoModel updatedTodo = TodoModel(
+      id: todoId,
+      title: titleController.text.trim(),
+      note: noteController.text.trim(),
+      priority: priority.value,
+      dueDate: dueDate,
+      category: categoryController.text.trim(),
+      tags: tags,
+      attachmentUrl: attachmentUrl ?? attachmentPath.value, // Dosya yolu
+    );
+
+    await _firestoreService.updateTodo(todoId, updatedTodo);
+    
+    fetchTodos(); // Güncel TODO listesini al
+    Get.back(); // Bekleme ekranını kapat
+    
+    Get.snackbar(
+      'Success', 
+      'TODO updated successfully!',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.green,
+      colorText: Colors.white,
+      duration: Duration(seconds: 3),
+    );
+
+  } catch (e) {
+    Get.snackbar(
+      'Error', 
+      'Failed to update TODO: $e',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+      duration: Duration(seconds: 3),
+    );
+  } finally {
+    isLoading(false); // İşlem tamamlandığında yüklenme durumunu kapat
   }
+}
 
   // Yeni TODO oluşturma fonksiyonu
   Future<void> createTodo() async {
@@ -147,6 +164,7 @@ class TodoController extends GetxController {
 
       DateTime dueDate = selectedDueDate.value ?? DateTime.now().add(Duration(days: 1)); // Seçilen tarih veya varsayılan
 
+      // Eğer saat seçilmediyse varsayılan olarak 23:59 ayarlanır
       if (selectedTime.value != null) {
         dueDate = DateTime(
           dueDate.year,
@@ -155,6 +173,8 @@ class TodoController extends GetxController {
           selectedTime.value!.hour,
           selectedTime.value!.minute,
         );
+      } else {
+        dueDate = DateTime(dueDate.year, dueDate.month, dueDate.day, 23, 59); // Varsayılan saat 23:59
       }
 
       // Dosya yüklemesi varsa önce dosyayı yükleyelim
@@ -171,8 +191,8 @@ class TodoController extends GetxController {
         note: noteController.text.trim(),
         priority: priority.value,
         dueDate: dueDate,
-        category: categoryController.text.trim(), // Category eklendi
-        tags: tags, // Tags eklendi
+        category: categoryController.text.trim(), 
+        tags: tags, 
         attachmentUrl: attachmentUrl, // Dosya URL'sini Firestore'a kaydediyoruz
       );
 
@@ -200,7 +220,7 @@ class TodoController extends GetxController {
       // Zamanı geçmiş TODO'ları kontrol edip silme işlemi
       for (var todo in todos) {
         if (todo.dueDate.isBefore(DateTime.now())) {
-          await _firestoreService.deleteTodo(todo.id); // Zamanı geçmiş TODO'yu sil
+          await _firestoreService.deleteTodo(todo.id); 
         }
       }
 
@@ -249,13 +269,5 @@ class TodoController extends GetxController {
   // Saat seçimi için fonksiyon
   void setTime(TimeOfDay time) {
     selectedTime.value = time;
-  }
-
-  // Saat seçici switch'i aç/kapat
-  void toggleTimePicker(bool isEnabled) {
-    isTimePickerEnabled.value = isEnabled;
-    if (!isEnabled) {
-      selectedTime.value = null; // Eğer kapatılırsa saati sıfırla
-    }
   }
 }
