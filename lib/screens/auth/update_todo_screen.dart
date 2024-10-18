@@ -262,7 +262,7 @@ class UpdateTodoScreen extends StatelessWidget {
 
                         if (Navigator.canPop(context)) {
                           Navigator.of(context)
-                              .pop(); // Dialog'u manuel kapatıyoruz
+                              .pop(); 
                         }
 
                         // Başarılı işlem snackbar'ı

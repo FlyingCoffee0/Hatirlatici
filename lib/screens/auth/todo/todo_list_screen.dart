@@ -16,7 +16,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
   @override
   void initState() {
     super.initState();
-    // Controller'ı sadece burada başlatıyoruz
+    
     _todoController.fetchTodos(); // İlk başlatma sırasında görevleri al
   }
 
