@@ -12,7 +12,9 @@ import 'package:firebase_storage/firebase_storage.dart'; // Firestore Storage
 class TodoController extends GetxController {
   final FirestoreService _firestoreService = FirestoreService();
   var todoList = <TodoModel>[].obs;
+  var filteredTodoList = <TodoModel>[].obs; // Arama sonucu filtrelenmiş liste
   var isLoading = false.obs;
+  var searchQuery = ''.obs; // Arama sorgusu için observable
 
   final titleController = TextEditingController();
   final noteController = TextEditingController();
@@ -25,23 +27,23 @@ class TodoController extends GetxController {
   var isTimePickerEnabled = false.obs; // Saat seçici etkin mi?
 
   // Tüm input alanlarını sıfırlama (Temizleme)
-void clearFormFields() {
-  titleController.clear();
-  noteController.clear();
-  categoryController.clear();
-  tagsController.clear();
-  selectedDueDate.value = null;
-  selectedTime.value = null;
-  attachmentPath.value = '';
-  priority.value = 1; // Varsayılan öncelik
-  isTimePickerEnabled.value = false; // Zaman seçiciyi kapat
-}
-
+  void clearFormFields() {
+    titleController.clear();
+    noteController.clear();
+    categoryController.clear();
+    tagsController.clear();
+    selectedDueDate.value = null;
+    selectedTime.value = null;
+    attachmentPath.value = '';
+    priority.value = 1; // Varsayılan öncelik
+    isTimePickerEnabled.value = false; // Zaman seçiciyi kapat
+  }
 
   @override
   void onInit() {
     super.onInit();
     fetchTodos();
+    debounce(searchQuery, (_) => filterTodos(), time: Duration(milliseconds: 300)); // Arama sorgusu her değiştiğinde filtreleme işlemi
   }
 
   // Dosya seçme fonksiyonu
@@ -186,34 +188,53 @@ void clearFormFields() {
     }
   }
 
- // Firestore'dan TODO'ları çekme ve zamanı geçmiş TODO'ları silme
-Future<void> fetchTodos() async {
-  isLoading(true);
-  try {
-    String userId = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
+  // Firestore'dan TODO'ları çekme ve zamanı geçmiş TODO'ları silme
+  Future<void> fetchTodos() async {
+    isLoading(true);
+    try {
+      String userId = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
 
-    // TODO'ları Firestore'dan alıyoruz
-    var todos = await _firestoreService.getTodos(userId);
+      // TODO'ları Firestore'dan alıyoruz
+      var todos = await _firestoreService.getTodos(userId);
 
-    // Zamanı geçmiş TODO'ları kontrol edip silme işlemi
-    for (var todo in todos) {
-      if (todo.dueDate.isBefore(DateTime.now())) {
-        await _firestoreService.deleteTodo(todo.id); // Zamanı geçmiş TODO'yu sil
+      // Zamanı geçmiş TODO'ları kontrol edip silme işlemi
+      for (var todo in todos) {
+        if (todo.dueDate.isBefore(DateTime.now())) {
+          await _firestoreService.deleteTodo(todo.id); // Zamanı geçmiş TODO'yu sil
+        }
       }
+
+      // Zamanı geçmemiş TODO'ları listeye ekliyoruz
+      todoList.assignAll(todos.where((todo) => todo.dueDate.isAfter(DateTime.now())).toList());
+
+      filterTodos(); // Arama sorgusuna göre filtrele
+
+    } catch (e) {
+      Get.snackbar('Error', e.toString());
+    } finally {
+      isLoading(false);
     }
-
-    // Zamanı geçmemiş TODO'ları listeye ekliyoruz
-    todoList.assignAll(todos.where((todo) => todo.dueDate.isAfter(DateTime.now())).toList());
-
-  } catch (e) {
-    Get.snackbar('Error', e.toString());
-  } finally {
-    isLoading(false);
   }
-}
 
+  // Arama sorgusuna göre TODO'ları filtreleme fonksiyonu
+  void filterTodos() {
+    if (searchQuery.isEmpty) {
+      filteredTodoList.assignAll(todoList); // Arama yoksa tüm TODO'ları göster
+    } else {
+      filteredTodoList.assignAll(
+        todoList.where((todo) =>
+          todo.title.toLowerCase().contains(searchQuery.value.toLowerCase()) ||
+          todo.note.toLowerCase().contains(searchQuery.value.toLowerCase()) ||
+          todo.category.toLowerCase().contains(searchQuery.value.toLowerCase())
+        ).toList(),
+      );
+    }
+  }
 
-
+  // Arama sorgusunu güncelleme
+  void updateSearchQuery(String query) {
+    searchQuery.value = query;
+  }
 
   // Kullanıcı öncelik seçimini güncelleme
   void setPriority(int value) {

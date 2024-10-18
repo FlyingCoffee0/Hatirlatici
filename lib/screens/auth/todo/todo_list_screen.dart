@@ -1,8 +1,10 @@
 import 'package:case_codeway/controllers/todo_controller.dart';
 import 'package:case_codeway/models/todo_model.dart';
+import 'package:case_codeway/screens/auth/todo_search_delegate.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart'; // Tarih formatlama için intl paketi
+
 
 class TodoListScreen extends StatelessWidget {
   final TodoController _todoController = Get.put(TodoController());
@@ -27,6 +29,16 @@ class TodoListScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text('My TODOs'),
         actions: [
+          // Arama butonu
+          IconButton(
+            icon: Icon(Icons.search),
+            onPressed: () {
+              showSearch(
+                context: context,
+                delegate: TodoSearchDelegate(_todoController),
+              );
+            },
+          ),
           IconButton(
             icon: Icon(Icons.add),
             onPressed: () => Get.toNamed('/createTodo'), // TODO oluşturma ekranına geçiş
@@ -38,14 +50,20 @@ class TodoListScreen extends StatelessWidget {
           return Center(child: CircularProgressIndicator());
         }
 
-        if (_todoController.todoList.isEmpty) {
+        // Eğer arama yapılmıyorsa varsayılan listeyi göster
+        var todoList = _todoController.filteredTodoList.isEmpty &&
+                _todoController.searchQuery.isEmpty
+            ? _todoController.todoList
+            : _todoController.filteredTodoList;
+
+        if (todoList.isEmpty) {
           return Center(child: Text('No TODOs available'));
         }
 
         return ListView.builder(
-          itemCount: _todoController.todoList.length,
+          itemCount: todoList.length,
           itemBuilder: (context, index) {
-            TodoModel todo = _todoController.todoList[index];
+            TodoModel todo = todoList[index];
 
             // Tarih ve saat formatlama
             String formattedDate = DateFormat('yyyy-MM-dd').format(todo.dueDate);
