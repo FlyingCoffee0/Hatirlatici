@@ -34,6 +34,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       title: 'TODO App',
+      debugShowCheckedModeBanner: false,
       initialRoute: '/signIn',
       getPages: [
         GetPage(name: '/signIn', page: () => SignInScreen()),
